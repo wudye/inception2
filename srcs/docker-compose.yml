@@ -1,0 +1,78 @@
+# open 127.0.0.1 to check the nginx
+# ou can access the Nginx server by navigating to https://127.0.0.1 in your web browser.
+# The Nginx server inside the container will listen on port 443, which is the standard
+# port for HTTPS traffic.
+# for check port 80 using http://127.0.0.1/80
+services:
+  nginx:
+    container_name: nginx
+    build: 
+      context: ./requirements/nginx
+      dockerfile: Dockerfile
+    ports:
+      - "443:443"
+    env_file: .env
+    restart: on-failure
+    depends_on:
+      - wordpress
+    networks:
+      - 42net
+    volumes:
+      - frontend:/var/www/html
+  
+  wordpress:
+    container_name: wordpress
+    build: 
+      context: ./requirements/wordpress
+      dockerfile: Dockerfile
+    ports:
+      - "9000:9000"
+    restart: on-failure
+    networks:
+      - 42net
+    depends_on:
+      - mariadb
+    env_file: .env
+    volumes:
+      - frontend:/var/www/html
+
+
+  mariadb:
+    container_name: mariadb
+    build: 
+      context: ./requirements/mariadb
+      dockerfile: Dockerfile
+    ports:
+      - "3306:3306"
+    restart: on-failure
+    networks:
+      - 42net
+    env_file: .env
+    volumes:
+      - backend:/var/lib/mysql
+
+
+networks:
+  42net:
+    name: 42net
+    driver: bridge    
+
+# /home/mwu/data/frontend: This is the path to the device on the host machine. In this case, it appears to be a directory located at /home/mwu/data/frontend. By specifying this path, you are indicating that the container should have access to this particular directory or device on the host.
+volumes:
+  frontend:
+    name: frontend
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/mwu/data/frontend
+      o: bind
+  backend:
+    name: backend
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/mwu/data/backend
+      o: bind
+
+
+# these two volums folder must be created on the host machine firstly
